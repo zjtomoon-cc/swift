@@ -564,19 +564,11 @@ public:
                                                    beginApply));
   }
 
-  EndApplyInst *createEndApply(SILLocation loc, SILValue beginApply) {
-    auto &C = getASTContext();
-
-    return insert(new (getModule()) EndApplyInst(getSILDebugLocation(loc),
-                                                 beginApply,
-                                                 SILType::getEmptyTupleType(C)));
-  }
-
   EndApplyInst *createEndApply(SILLocation loc, SILValue beginApply, SILType ResultType) {
     return insert(new (getModule()) EndApplyInst(getSILDebugLocation(loc),
                                                  beginApply, ResultType));
   }
-  
+
   BuiltinInst *createBuiltin(SILLocation Loc, Identifier Name, SILType ResultTy,
                              SubstitutionMap Subs,
                              ArrayRef<SILValue> Args) {
