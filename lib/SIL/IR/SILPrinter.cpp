@@ -1574,7 +1574,7 @@ public:
   }
 
   void visitEndApplyInst(EndApplyInst *AI) {
-    *this << Ctx.getID(AI->getOperand());
+    *this << Ctx.getID(AI->getOperand()) << " : " << AI->getType();
   }
 
   void visitFunctionRefInst(FunctionRefInst *FRI) {
