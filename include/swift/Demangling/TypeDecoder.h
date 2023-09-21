@@ -47,6 +47,12 @@ enum class ImplMetatypeRepresentation {
   ObjC,
 };
 
+enum class ImplCoroutineKind {
+  None,
+  YieldOnce,
+  YieldMany,
+};
+
 /// Describe a function parameter, parameterized on the type
 /// representation.
 template <typename BuiltType>
@@ -172,6 +178,9 @@ public:
 
   BuiltType getType() const { return Type; }
 };
+
+template<typename Type>
+using ImplFunctionYield = ImplFunctionParam<Type>;
 
 enum class ImplResultConvention {
   Indirect,
@@ -931,9 +940,11 @@ protected:
     case NodeKind::ImplFunctionType: {
       auto calleeConvention = ImplParameterConvention::Direct_Unowned;
       llvm::SmallVector<ImplFunctionParam<BuiltType>, 8> parameters;
+      llvm::SmallVector<ImplFunctionYield<BuiltType>, 8> yields;
       llvm::SmallVector<ImplFunctionResult<BuiltType>, 8> results;
       llvm::SmallVector<ImplFunctionResult<BuiltType>, 8> errorResults;
       ImplFunctionTypeFlags flags;
+      ImplCoroutineKind coroutineKind = ImplCoroutineKind::None;
 
       for (unsigned i = 0; i < Node->getNumChildren(); i++) {
         auto child = Node->getChild(i);
@@ -973,6 +984,10 @@ protected:
             flags = flags.withConcurrent();
           } else if (child->getText() == "@async") {
             flags = flags.withAsync();
+          } else if (child->getText() == "@yield_once") {
+            coroutineKind = ImplCoroutineKind::YieldOnce;
+          } else if (child->getText() == "@yield_many") {
+            coroutineKind = ImplCoroutineKind::YieldMany;
           }
         } else if (child->getKind() == NodeKind::ImplDifferentiabilityKind) {
           ImplFunctionDifferentiabilityKind implDiffKind;
@@ -994,10 +1009,14 @@ protected:
           if (decodeImplFunctionParam(child, depth + 1, parameters))
             return MAKE_NODE_TYPE_ERROR0(child,
                                          "failed to decode function parameter");
+        } else if (child->getKind() == NodeKind::ImplYield) {
+          if (decodeImplFunctionParam(child, depth + 1, yields))
+            return MAKE_NODE_TYPE_ERROR0(child,
+                                         "failed to decode function yields");
         } else if (child->getKind() == NodeKind::ImplResult) {
           if (decodeImplFunctionParam(child, depth + 1, results))
             return MAKE_NODE_TYPE_ERROR0(child,
-                                         "failed to decode function parameter");
+                                         "failed to decode function results");
         } else if (child->getKind() == NodeKind::ImplErrorResult) {
           if (decodeImplFunctionPart(child, depth + 1, errorResults))
             return MAKE_NODE_TYPE_ERROR0(child,
@@ -1021,11 +1040,10 @@ protected:
 
       // TODO: Some cases not handled above, but *probably* they cannot
       // appear as the types of values in SIL (yet?):
-      // - functions with yield returns
       // - functions with generic signatures
       // - foreign error conventions
-      return Builder.createImplFunctionType(calleeConvention,
-                                            parameters, results,
+      return Builder.createImplFunctionType(calleeConvention, coroutineKind,
+                                            parameters, yields, results,
                                             errorResult, flags);
     }
 
