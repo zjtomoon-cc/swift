@@ -17,7 +17,7 @@ module NSOptionsMangling {
   header "NSOptionsMangling.h"
 }
 
-module NSNotificationBridging {
+module NSNofiticationBridging {
   header "nsnotification-bridging.h"
   requires objc
   requires cplusplus
