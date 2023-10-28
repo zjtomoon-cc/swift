@@ -597,7 +597,7 @@ SerializedModuleBaseName::findInterfacePath(llvm::vfs::FileSystem &fs) const {
 
   // If present, use the private interface instead of the public one.
   std::string privatePath{
-      getName(file_types::TY_PrivateSwiftModuleInterfaceFile)};
+      getName(file_types::TY_PrivateSwiftModuleInterfaceFile)}; // ES TODO: should we add packgae decls to private.swiftinterface? else we need 2 interfaces to build a module?
   if (fs.exists(privatePath))
     return privatePath;
   return interfacePath;
@@ -681,6 +681,7 @@ bool SerializedModuleLoaderBase::findModule(
       (moduleName + ".framework").str(),
       genericBaseName.getName(file_types::TY_SwiftModuleInterfaceFile),
       genericBaseName.getName(file_types::TY_PrivateSwiftModuleInterfaceFile),
+      genericBaseName.getName(file_types::TY_PackageSwiftModuleInterfaceFile),
       genericBaseName.getName(file_types::TY_SwiftModuleFile)};
 
   auto searchPaths = Ctx.SearchPathOpts.moduleSearchPathsContainingFile(

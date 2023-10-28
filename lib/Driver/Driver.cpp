@@ -2084,6 +2084,7 @@ void Driver::buildActions(SmallVectorImpl<const Action *> &TopLevelActions,
       case file_types::TY_BitstreamOptRecord:
       case file_types::TY_SwiftModuleInterfaceFile:
       case file_types::TY_PrivateSwiftModuleInterfaceFile:
+      case file_types::TY_PackageSwiftModuleInterfaceFile:
       case file_types::TY_SwiftModuleSummaryFile:
       case file_types::TY_SwiftCrossImportDir:
       case file_types::TY_SwiftOverlayFile:
@@ -2333,6 +2334,11 @@ void Driver::buildActions(SmallVectorImpl<const Action *> &TopLevelActions,
       TopLevelActions.push_back(
           C.createAction<VerifyModuleInterfaceJobAction>(MergeModuleAction,
               file_types::TY_PrivateSwiftModuleInterfaceFile));
+    }
+    if (Args.hasArgNoClaim(options::OPT_emit_package_module_interface_path)) {
+      TopLevelActions.push_back(
+          C.createAction<VerifyModuleInterfaceJobAction>(MergeModuleAction,
+              file_types::TY_PackageSwiftModuleInterfaceFile));
     }
   }
 }
@@ -2975,6 +2981,10 @@ Job *Driver::buildJobsForAction(Compilation &C, const JobAction *JA,
   if (C.getArgs().hasArg(options::OPT_emit_private_module_interface_path))
     chooseModuleInterfacePath(C, JA, workingDirectory, Buf,
       file_types::TY_PrivateSwiftModuleInterfaceFile, Output.get());
+
+  if (C.getArgs().hasArg(options::OPT_emit_package_module_interface_path))
+    chooseModuleInterfacePath(C, JA, workingDirectory, Buf,
+      file_types::TY_PackageSwiftModuleInterfaceFile, Output.get());
 
   if (C.getArgs().hasArg(options::OPT_update_code) && isa<CompileJobAction>(JA))
     chooseRemappingOutputPath(C, OutputMap, Output.get());

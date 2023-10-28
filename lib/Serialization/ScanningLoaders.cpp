@@ -71,7 +71,7 @@ std::error_code SwiftModuleScanner::findModuleFilesInDirectory(
       BaseName.getName(file_types::TY_PrivateSwiftModuleInterfaceFile);
   if (fs.exists(PrivateInPath)) {
     InPath = PrivateInPath;
-  }
+  } // ES TODO: add package path? 
   auto dependencies =
       scanInterfaceFile(InPath, IsFramework, isTestableDependencyLookup);
   if (dependencies) {
